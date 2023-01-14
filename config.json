@@ -1,7 +1,7 @@
 {
   "timeConfig": {
     "startTime": 1,
-    "betweenTime": 300,
+    "betweenTime": 10,
     "travelTime": 1
   },
   "positions": {
