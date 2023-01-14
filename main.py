@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets
 
 from habbo_awakeui import UiMainWindow
 import json
+import pyautogui
 
 
 def read_config():
