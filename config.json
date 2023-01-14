@@ -1,11 +1,25 @@
 {
-  "startTime": 5,
-  "betweenTime": 300,
-  "travelTime": 2,
+  "timeConfig": {
+    "startTime": 5,
+    "betweenTime": 300,
+    "travelTime": 2
+  },
   "positions": {
-    "position1": {"x": 0, "y": 0},
-    "position2": {"x": 0, "y": 0},
-    "position3": {"x": 0, "y": 0},
-    "position4": {"x": 0, "y": 0}
+    "position1": {
+      "x": 0,
+      "y": 0
+    },
+    "position2": {
+      "x": 0,
+      "y": 0
+    },
+    "position3": {
+      "x": 0,
+      "y": 0
+    },
+    "position4": {
+      "x": 0,
+      "y": 0
+    }
   }
 }

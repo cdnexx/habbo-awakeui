@@ -7,9 +7,9 @@ import json
 def read_config():
     with open("config.json") as config_file:
         configs = json.load(config_file)
-    start_time = configs["startTime"]
-    between_time = configs["betweenTime"]
-    travel_time = configs["travelTime"]
+    start_time = configs["timeConfig"]["startTime"]
+    between_time = configs["timeConfig"]["betweenTime"]
+    travel_time = configs["timeConfig"]["travelTime"]
     return start_time, between_time, travel_time
 
 

@@ -105,6 +105,7 @@ class UiMainWindow(object):
         self.default_button = QtWidgets.QPushButton(self.config_tab)
         self.default_button.setGeometry(QtCore.QRect(270, 50, 75, 23))
         self.default_button.setObjectName("default_button")
+        self.default_button.clicked.connect(self.default_config)
         self.assign_box = QtWidgets.QGroupBox(self.config_tab)
         self.assign_box.setGeometry(QtCore.QRect(10, 110, 331, 51))
         self.assign_box.setObjectName("assign_box")
@@ -140,17 +141,21 @@ class UiMainWindow(object):
         return int(self.travel_input.text())
 
     def save_config(self):
-        print("init")
-        with open("config.json", "r+") as config_file:
+        with open("config.json", "r") as config_file:
             configs = json.load(config_file)
-        configs["startTime"] = self.get_start()
-        print(self.get_start())
-        config_file.seek(0)
-        print("dumping")
-        json.dump(configs, config_file)
-        print("truncate")
-        config_file.truncate()
-        print("end")
+        configs["timeConfig"]["startTime"] = self.get_start()
+        configs["timeConfig"]["betweenTime"] = self.get_between()
+        configs["timeConfig"]["travelTime"] = self.get_travel()
+        with open("config.json", "w") as config_file:
+            json.dump(configs, config_file, indent=2)
+
+    def default_config(self):
+        default_start = 5
+        default_between = 300
+        default_travel = 2
+        self.start_input.setProperty("value", default_start)
+        self.between_input.setProperty("value", default_between)
+        self.travel_input.setProperty("value", default_travel)
 
     def retranslate_ui(self, main_windows):
         _translate = QtCore.QCoreApplication.translate
