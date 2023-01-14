@@ -2,8 +2,6 @@ import pyautogui as pg
 import time
 from datetime import datetime
 
-global seat, pos1, pos2, pos3
-
 def move(position: tuple):
     pg.moveTo(position[0], position[1], 2)
     pg.click()

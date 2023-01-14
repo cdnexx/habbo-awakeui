@@ -9,7 +9,9 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import pyautogui as pg
+import time
+from datetime import datetime
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -20,32 +22,10 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.tab_widget = QtWidgets.QTabWidget(self.centralwidget)
         self.tab_widget.setGeometry(QtCore.QRect(20, 10, 361, 191))
-        palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(0, 255, 0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(0, 255, 0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(240, 240, 240))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
-        self.tab_widget.setPalette(palette)
         self.tab_widget.setUsesScrollButtons(True)
         self.tab_widget.setObjectName("tab_widget")
         self.main_tab = QtWidgets.QWidget()
         self.main_tab.setObjectName("main_tab")
-        self.frame = QtWidgets.QFrame(self.main_tab)
-        self.frame.setGeometry(QtCore.QRect(260, 10, 91, 71))
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.stop_button = QtWidgets.QPushButton(self.frame)
-        self.stop_button.setGeometry(QtCore.QRect(10, 40, 75, 23))
-        self.stop_button.setObjectName("stop_button")
-        self.start_button = QtWidgets.QPushButton(self.frame)
-        self.start_button.setGeometry(QtCore.QRect(10, 10, 75, 23))
-        self.start_button.setObjectName("start_button")
         self.state_label = QtWidgets.QLabel(self.main_tab)
         self.state_label.setGeometry(QtCore.QRect(10, 20, 71, 21))
         self.state_label.setObjectName("state_label")
@@ -78,6 +58,12 @@ class Ui_MainWindow(object):
         self.state_edit.setGeometry(QtCore.QRect(110, 20, 113, 20))
         self.state_edit.setReadOnly(True)
         self.state_edit.setObjectName("state_edit")
+        self.start_button = QtWidgets.QPushButton(self.main_tab)
+        self.start_button.setGeometry(QtCore.QRect(270, 20, 75, 23))
+        self.start_button.setObjectName("start_button")
+        self.stop_button = QtWidgets.QPushButton(self.main_tab)
+        self.stop_button.setGeometry(QtCore.QRect(270, 50, 75, 23))
+        self.stop_button.setObjectName("stop_button")
         self.tab_widget.addTab(self.main_tab, "")
         self.config_tab = QtWidgets.QWidget()
         self.config_tab.setObjectName("config_tab")
@@ -139,8 +125,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Habbo Awake"))
-        self.stop_button.setText(_translate("MainWindow", "Stop"))
-        self.start_button.setText(_translate("MainWindow", "Start"))
         self.state_label.setText(_translate("MainWindow", "State:"))
         self.cycle_label.setText(_translate("MainWindow", "Cycle: "))
         self.last_label.setText(_translate("MainWindow", "Last cycle at"))
@@ -149,6 +133,8 @@ class Ui_MainWindow(object):
         self.last_edit.setText(_translate("MainWindow", "00:00:00"))
         self.cycle_edit.setText(_translate("MainWindow", "0"))
         self.state_edit.setText(_translate("MainWindow", "STOPPED"))
+        self.start_button.setText(_translate("MainWindow", "Start"))
+        self.stop_button.setText(_translate("MainWindow", "Stop"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.main_tab), _translate("MainWindow", "Main"))
         self.start_label.setText(_translate("MainWindow", "Time to start (seg)"))
         self.between_label.setText(_translate("MainWindow", "Time between cycles (seg)"))
