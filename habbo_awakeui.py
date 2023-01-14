@@ -9,16 +9,23 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import json
 import pyautogui as pg
 import time
 from datetime import datetime
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(390, 220)
-        MainWindow.setAnimated(True)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
+
+class UiMainWindow(object):
+    def __init__(self, start_time=5, between_time=300, travel_time=2):
+        self.__start_time = start_time
+        self.__between_time = between_time
+        self.__travel_time = travel_time
+
+    def setup_ui(self, main_windows):
+        main_windows.setObjectName("main_windows")
+        main_windows.resize(390, 220)
+        main_windows.setAnimated(True)
+        self.centralwidget = QtWidgets.QWidget(main_windows)
         self.centralwidget.setObjectName("centralwidget")
         self.tab_widget = QtWidgets.QTabWidget(self.centralwidget)
         self.tab_widget.setGeometry(QtCore.QRect(20, 10, 361, 191))
@@ -70,7 +77,7 @@ class Ui_MainWindow(object):
         self.start_input = QtWidgets.QSpinBox(self.config_tab)
         self.start_input.setGeometry(QtCore.QRect(180, 20, 71, 21))
         self.start_input.setMaximum(999999999)
-        self.start_input.setProperty("value", 5)
+        self.start_input.setProperty("value", self.__start_time)
         self.start_input.setObjectName("start_input")
         self.start_label = QtWidgets.QLabel(self.config_tab)
         self.start_label.setGeometry(QtCore.QRect(10, 20, 151, 21))
@@ -81,7 +88,7 @@ class Ui_MainWindow(object):
         self.between_input = QtWidgets.QSpinBox(self.config_tab)
         self.between_input.setGeometry(QtCore.QRect(180, 50, 71, 21))
         self.between_input.setMaximum(999999999)
-        self.between_input.setProperty("value", 300)
+        self.between_input.setProperty("value", self.__between_time)
         self.between_input.setObjectName("between_input")
         self.travel_label = QtWidgets.QLabel(self.config_tab)
         self.travel_label.setGeometry(QtCore.QRect(10, 80, 161, 21))
@@ -89,11 +96,12 @@ class Ui_MainWindow(object):
         self.travel_input = QtWidgets.QSpinBox(self.config_tab)
         self.travel_input.setGeometry(QtCore.QRect(180, 80, 71, 21))
         self.travel_input.setMaximum(999999999)
-        self.travel_input.setProperty("value", 2)
+        self.travel_input.setProperty("value", self.__travel_time)
         self.travel_input.setObjectName("travel_input")
         self.save_button = QtWidgets.QPushButton(self.config_tab)
         self.save_button.setGeometry(QtCore.QRect(270, 20, 75, 23))
         self.save_button.setObjectName("save_button")
+        self.save_button.clicked.connect(self.save_config)
         self.default_button = QtWidgets.QPushButton(self.config_tab)
         self.default_button.setGeometry(QtCore.QRect(270, 50, 75, 23))
         self.default_button.setObjectName("default_button")
@@ -113,47 +121,59 @@ class Ui_MainWindow(object):
         self.position4_button.setGeometry(QtCore.QRect(250, 20, 75, 23))
         self.position4_button.setObjectName("position4_button")
         self.tab_widget.addTab(self.config_tab, "")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        main_windows.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(main_windows)
         self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        main_windows.setStatusBar(self.statusbar)
 
-        self.retranslateUi(MainWindow)
+        self.retranslate_ui(main_windows)
         self.tab_widget.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(main_windows)
 
-    def retranslateUi(self, MainWindow):
+    def get_start(self):
+        return int(self.start_input.text())
+
+    def get_between(self):
+        return int(self.between_input.text())
+
+    def get_travel(self):
+        return int(self.travel_input.text())
+
+    def save_config(self):
+        print("init")
+        with open("config.json", "r+") as config_file:
+            configs = json.load(config_file)
+        configs["startTime"] = self.get_start()
+        print(self.get_start())
+        config_file.seek(0)
+        print("dumping")
+        json.dump(configs, config_file)
+        print("truncate")
+        config_file.truncate()
+        print("end")
+
+    def retranslate_ui(self, main_windows):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Habbo Awake"))
-        self.state_label.setText(_translate("MainWindow", "State:"))
-        self.cycle_label.setText(_translate("MainWindow", "Cycle: "))
-        self.last_label.setText(_translate("MainWindow", "Last cycle at"))
-        self.next_label.setText(_translate("MainWindow", "Next cycle in"))
-        self.next_edit.setText(_translate("MainWindow", "0 seconds"))
-        self.last_edit.setText(_translate("MainWindow", "00:00:00"))
-        self.cycle_edit.setText(_translate("MainWindow", "0"))
-        self.state_edit.setText(_translate("MainWindow", "STOPPED"))
-        self.start_button.setText(_translate("MainWindow", "Start"))
-        self.stop_button.setText(_translate("MainWindow", "Stop"))
-        self.tab_widget.setTabText(self.tab_widget.indexOf(self.main_tab), _translate("MainWindow", "Main"))
-        self.start_label.setText(_translate("MainWindow", "Time to start (seg)"))
-        self.between_label.setText(_translate("MainWindow", "Time between cycles (seg)"))
-        self.travel_label.setText(_translate("MainWindow", "Travel time (seg)"))
-        self.save_button.setText(_translate("MainWindow", "Save"))
-        self.default_button.setText(_translate("MainWindow", "Default"))
-        self.assign_box.setTitle(_translate("MainWindow", "Assign"))
-        self.position1_button.setText(_translate("MainWindow", "Position 1"))
-        self.position2_button.setText(_translate("MainWindow", "Position 2"))
-        self.position3_button.setText(_translate("MainWindow", "Position 3"))
-        self.position4_button.setText(_translate("MainWindow", "Position 4"))
-        self.tab_widget.setTabText(self.tab_widget.indexOf(self.config_tab), _translate("MainWindow", "Config"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+        main_windows.setWindowTitle(_translate("main_windows", "Habbo Awake"))
+        self.state_label.setText(_translate("main_windows", "State:"))
+        self.cycle_label.setText(_translate("main_windows", "Cycle: "))
+        self.last_label.setText(_translate("main_windows", "Last cycle at"))
+        self.next_label.setText(_translate("main_windows", "Next cycle in"))
+        self.next_edit.setText(_translate("main_windows", "0 seconds"))
+        self.last_edit.setText(_translate("main_windows", "00:00:00"))
+        self.cycle_edit.setText(_translate("main_windows", "0"))
+        self.state_edit.setText(_translate("main_windows", "STOPPED"))
+        self.start_button.setText(_translate("main_windows", "Start"))
+        self.stop_button.setText(_translate("main_windows", "Stop"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.main_tab), _translate("main_windows", "Main"))
+        self.start_label.setText(_translate("main_windows", "Time to start (seg)"))
+        self.between_label.setText(_translate("main_windows", "Time between cycles (seg)"))
+        self.travel_label.setText(_translate("main_windows", "Travel time (seg)"))
+        self.save_button.setText(_translate("main_windows", "Save"))
+        self.default_button.setText(_translate("main_windows", "Default"))
+        self.assign_box.setTitle(_translate("main_windows", "Assign"))
+        self.position1_button.setText(_translate("main_windows", "Position 1"))
+        self.position2_button.setText(_translate("main_windows", "Position 2"))
+        self.position3_button.setText(_translate("main_windows", "Position 3"))
+        self.position4_button.setText(_translate("main_windows", "Position 4"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.config_tab), _translate("main_windows", "Config"))
