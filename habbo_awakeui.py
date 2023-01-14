@@ -23,6 +23,8 @@ class UiMainWindow(QtWidgets.QDialog):
         self.__start_time = start_time
         self.__between_time = between_time
         self.__travel_time = travel_time
+        self.__is_thread = True
+        self.__flag = True
 
     def setup_ui(self, main_windows):
         main_windows.setObjectName("main_windows")
@@ -75,7 +77,7 @@ class UiMainWindow(QtWidgets.QDialog):
         self.stop_button = QtWidgets.QPushButton(self.main_tab)
         self.stop_button.setGeometry(QtCore.QRect(270, 50, 75, 23))
         self.stop_button.setObjectName("stop_button")
-        self.stop_button.clicked.connect(lambda: self.worker.quit())
+        self.stop_button.clicked.connect(lambda: self.stop_func) # Fixxxxxxx
         self.tab_widget.addTab(self.main_tab, "")
         self.config_tab = QtWidgets.QWidget()
         self.config_tab.setObjectName("config_tab")
@@ -169,9 +171,12 @@ class UiMainWindow(QtWidgets.QDialog):
     def record_position(self, position_number):
         with open("config.json", "r") as config_file:
             configs = json.load(config_file)
-        QtWidgets.QMessageBox.information(self, "Done!", 'Recording position 3 seconds after pressing "OK"')
+        QtWidgets.QMessageBox.information(self, f"Recording {position_number}",
+                                          'Recording position 3 seconds after pressing "OK"')
         time.sleep(3)
         record = pg.position()
+        QtWidgets.QMessageBox.information(self, "Succesfully recorded",
+                                          f'Position recorded at x:{record.x} y:{record.y}')
         configs["positions"][f"position{position_number}"]["x"] = record.x
         configs["positions"][f"position{position_number}"]["y"] = record.y
         with open("config.json", "w") as config_file:
@@ -180,17 +185,24 @@ class UiMainWindow(QtWidgets.QDialog):
         print(f"Position {position_number} recorded")
 
     def start_awake(self):
+        self.__flag = True
         s = self.get_start()
         b = self.get_between()
         t = self.get_travel()
-        self.worker = ClickThread(start=s,
-                                  between=b,
-                                  travel=t,
-                                  state_edit=self.state_edit,
-                                  cycle_edit=self.cycle_edit,
-                                  last_edit=self.last_edit,
-                                  next_edit=self.next_edit)
-        self.worker.start()
+        if self.__is_thread:  # Limit to one thread
+            self.__is_thread = False
+            self.worker = ClickThread(start=s,
+                                      between=b,
+                                      travel=t,
+                                      state_edit=self.state_edit,
+                                      cycle_edit=self.cycle_edit,
+                                      last_edit=self.last_edit,
+                                      next_edit=self.next_edit,
+                                      flag=self.__flag)
+            self.worker.start()
+
+    def stop_func(self):
+        self.__flag = False
 
     def retranslate_ui(self, main_windows):
         _translate = QtCore.QCoreApplication.translate
@@ -221,7 +233,7 @@ class UiMainWindow(QtWidgets.QDialog):
 
 
 class ClickThread(QtCore.QThread):
-    def __init__(self, start, between, travel, state_edit, cycle_edit, last_edit, next_edit):
+    def __init__(self, start, between, travel, state_edit, cycle_edit, last_edit, next_edit, flag):
         super().__init__()
         self.__start = start
         self.__between = between
@@ -230,6 +242,7 @@ class ClickThread(QtCore.QThread):
         self.__cycle_edit = cycle_edit
         self.__last_edit = last_edit
         self.__next_edit = next_edit
+        self.__flag = flag
 
     def run(self) -> None:
         with open("config.json", "r") as config_file:
@@ -242,22 +255,24 @@ class ClickThread(QtCore.QThread):
         self.__state_edit.setStyleSheet("background: lightblue;")
         Event().wait(self.__start)
         cycle = 1
-        while True:
+        while self.__flag:
             self.__cycle_edit.setText(f"{cycle}")
             self.__last_edit.setText(self.get_time())
             self.__state_edit.setText("RUNNING")
             self.__state_edit.setStyleSheet("background: lightgreen;")
             self.__next_edit.setText("executing")
-            self.move(pos1)
             self.move(pos2)
             self.move(pos3)
             self.move(pos4)
+            self.move(pos1)
             for i in range(self.__between):
                 self.__next_edit.setText(f"{self.__between - i} seconds")
                 self.__state_edit.setText("WAITING")
                 self.__state_edit.setStyleSheet("background: yellow;")
                 Event().wait(1)
             cycle += 1
+        self.__state_edit.setText("STOPPED")
+        self.__state_edit.setStyleSheet("background: lightgray;")
 
     def move(self, position):
         pg.moveTo(position["x"], position["y"], self.__travel)

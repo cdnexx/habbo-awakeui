@@ -1,13 +1,13 @@
 {
   "timeConfig": {
-    "startTime": 1,
+    "startTime": 3,
     "betweenTime": 10,
     "travelTime": 1
   },
   "positions": {
     "position1": {
-      "x": 1275,
-      "y": 1048
+      "x": 782,
+      "y": 256
     },
     "position2": {
       "x": 1148,
