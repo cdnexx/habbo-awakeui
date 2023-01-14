@@ -15,8 +15,10 @@ import time
 from datetime import datetime
 
 
-class UiMainWindow(object):
+class UiMainWindow(QtWidgets.QDialog):
     def __init__(self, start_time=5, between_time=300, travel_time=2):
+        super().__init__()
+        self.worker = None
         self.__start_time = start_time
         self.__between_time = between_time
         self.__travel_time = travel_time
@@ -68,9 +70,11 @@ class UiMainWindow(object):
         self.start_button = QtWidgets.QPushButton(self.main_tab)
         self.start_button.setGeometry(QtCore.QRect(270, 20, 75, 23))
         self.start_button.setObjectName("start_button")
+        self.start_button.clicked.connect(self.start_awake)
         self.stop_button = QtWidgets.QPushButton(self.main_tab)
         self.stop_button.setGeometry(QtCore.QRect(270, 50, 75, 23))
         self.stop_button.setObjectName("stop_button")
+        self.stop_button.clicked.connect(lambda: self.worker.quit())
         self.tab_widget.addTab(self.main_tab, "")
         self.config_tab = QtWidgets.QWidget()
         self.config_tab.setObjectName("config_tab")
@@ -112,15 +116,19 @@ class UiMainWindow(object):
         self.position1_button = QtWidgets.QPushButton(self.assign_box)
         self.position1_button.setGeometry(QtCore.QRect(10, 20, 75, 23))
         self.position1_button.setObjectName("position1_button")
+        self.position1_button.clicked.connect(lambda: self.record_position(1))
         self.position2_button = QtWidgets.QPushButton(self.assign_box)
         self.position2_button.setGeometry(QtCore.QRect(90, 20, 75, 23))
         self.position2_button.setObjectName("position2_button")
+        self.position2_button.clicked.connect(lambda: self.record_position(2))
         self.position3_button = QtWidgets.QPushButton(self.assign_box)
         self.position3_button.setGeometry(QtCore.QRect(170, 20, 75, 23))
         self.position3_button.setObjectName("position3_button")
+        self.position3_button.clicked.connect(lambda: self.record_position(3))
         self.position4_button = QtWidgets.QPushButton(self.assign_box)
         self.position4_button.setGeometry(QtCore.QRect(250, 20, 75, 23))
         self.position4_button.setObjectName("position4_button")
+        self.position4_button.clicked.connect(lambda: self.record_position(4))
         self.tab_widget.addTab(self.config_tab, "")
         main_windows.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(main_windows)
@@ -157,6 +165,30 @@ class UiMainWindow(object):
         self.between_input.setProperty("value", default_between)
         self.travel_input.setProperty("value", default_travel)
 
+    def record_position(self, position_number):
+        with open("config.json", "r") as config_file:
+            configs = json.load(config_file)
+        QtWidgets.QMessageBox.information(self, "Done!", 'Recording position 3 seconds after pressing "OK"')
+        time.sleep(3)
+        record = pg.position()
+        configs["positions"][f"position{position_number}"]["x"] = record.x
+        configs["positions"][f"position{position_number}"]["y"] = record.y
+        with open("config.json", "w") as config_file:
+            json.dump(configs, config_file, indent=2)
+        print(record)
+        print(f"Position {position_number} recorded")
+
+    def start_awake(self):
+        s = self.get_start()
+        b = self.get_between()
+        t = self.get_travel()
+        self.state_edit.setText("RUNNING")
+        self.worker = ClickThread(start=s, between=b, travel=t)
+        self.worker.start()
+
+
+
+
     def retranslate_ui(self, main_windows):
         _translate = QtCore.QCoreApplication.translate
         main_windows.setWindowTitle(_translate("main_windows", "Habbo Awake"))
@@ -182,3 +214,33 @@ class UiMainWindow(object):
         self.position3_button.setText(_translate("main_windows", "Position 3"))
         self.position4_button.setText(_translate("main_windows", "Position 4"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.config_tab), _translate("main_windows", "Config"))
+
+
+class ClickThread(QtCore.QThread):
+    def __init__(self, start, between, travel):
+        super().__init__()
+        self.__start = start
+        self.__between = between
+        self.__travel = travel
+
+    def run(self) -> None:
+        print("Usando posiciones guardadas.")
+        with open("config.json", "r") as config_file:
+            configs = json.load(config_file)
+        pos1 = configs["positions"]["position1"]
+        pos2 = configs["positions"]["position2"]
+        pos3 = configs["positions"]["position3"]
+        pos4 = configs["positions"]["position4"]
+        print("Iniciando en 5 segundos...")
+        time.sleep(self.__start)
+        while True:
+            self.move(pos1)
+            self.move(pos2)
+            self.move(pos3)
+            self.move(pos4)
+            print(f"Esperando {self.__between} segundos")
+            time.sleep(self.__between)
+
+    def move(self, position):
+        pg.moveTo(position["x"], position["y"], self.__travel)
+        pg.click()
