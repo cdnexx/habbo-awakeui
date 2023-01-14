@@ -13,6 +13,7 @@ import json
 import pyautogui as pg
 import time
 from datetime import datetime
+from threading import Event
 
 
 class UiMainWindow(QtWidgets.QDialog):
@@ -182,12 +183,14 @@ class UiMainWindow(QtWidgets.QDialog):
         s = self.get_start()
         b = self.get_between()
         t = self.get_travel()
-        self.state_edit.setText("RUNNING")
-        self.worker = ClickThread(start=s, between=b, travel=t)
+        self.worker = ClickThread(start=s,
+                                  between=b,
+                                  travel=t,
+                                  state_edit=self.state_edit,
+                                  cycle_edit=self.cycle_edit,
+                                  last_edit=self.last_edit,
+                                  next_edit=self.next_edit)
         self.worker.start()
-
-
-
 
     def retranslate_ui(self, main_windows):
         _translate = QtCore.QCoreApplication.translate
@@ -200,6 +203,7 @@ class UiMainWindow(QtWidgets.QDialog):
         self.last_edit.setText(_translate("main_windows", "00:00:00"))
         self.cycle_edit.setText(_translate("main_windows", "0"))
         self.state_edit.setText(_translate("main_windows", "STOPPED"))
+        self.state_edit.setStyleSheet("background: lightgray")
         self.start_button.setText(_translate("main_windows", "Start"))
         self.stop_button.setText(_translate("main_windows", "Stop"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.main_tab), _translate("main_windows", "Main"))
@@ -217,30 +221,50 @@ class UiMainWindow(QtWidgets.QDialog):
 
 
 class ClickThread(QtCore.QThread):
-    def __init__(self, start, between, travel):
+    def __init__(self, start, between, travel, state_edit, cycle_edit, last_edit, next_edit):
         super().__init__()
         self.__start = start
         self.__between = between
         self.__travel = travel
+        self.__state_edit = state_edit
+        self.__cycle_edit = cycle_edit
+        self.__last_edit = last_edit
+        self.__next_edit = next_edit
 
     def run(self) -> None:
-        print("Usando posiciones guardadas.")
         with open("config.json", "r") as config_file:
             configs = json.load(config_file)
         pos1 = configs["positions"]["position1"]
         pos2 = configs["positions"]["position2"]
         pos3 = configs["positions"]["position3"]
         pos4 = configs["positions"]["position4"]
-        print("Iniciando en 5 segundos...")
-        time.sleep(self.__start)
+        self.__state_edit.setText("STARTING")
+        self.__state_edit.setStyleSheet("background: lightblue;")
+        Event().wait(self.__start)
+        cycle = 1
         while True:
+            self.__cycle_edit.setText(f"{cycle}")
+            self.__last_edit.setText(self.get_time())
+            self.__state_edit.setText("RUNNING")
+            self.__state_edit.setStyleSheet("background: lightgreen;")
+            self.__next_edit.setText("executing")
             self.move(pos1)
             self.move(pos2)
             self.move(pos3)
             self.move(pos4)
-            print(f"Esperando {self.__between} segundos")
-            time.sleep(self.__between)
+            for i in range(self.__between):
+                self.__next_edit.setText(f"{self.__between - i} seconds")
+                self.__state_edit.setText("WAITING")
+                self.__state_edit.setStyleSheet("background: yellow;")
+                Event().wait(1)
+            cycle += 1
 
     def move(self, position):
         pg.moveTo(position["x"], position["y"], self.__travel)
         pg.click()
+
+    @staticmethod
+    def get_time():
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        return current_time
